@@ -1,0 +1,47 @@
+version: '2.1'
+services:
+  db:
+    image: postgres:latest
+    # build: ./pg_setup
+    environment:
+      # just for the demo
+      - "POSTGRES_HOST_AUTH_METHOD=trust"
+      - "POSTGRES_USER=mitaka"
+      - "POSTGRES_PASSWORD=mitaka1"
+      - "POSTGRES_DB=handball_app"
+    # no db persistence
+    # volumes:
+    #   - ./pgdata:/var/lib/postgresql/data
+  web:
+    build: .
+    command: python3 manage.py runserver 0.0.0.0:8001
+    volumes:
+      - .:/django-docker
+    ports:
+      # do not fight other applications
+      - "8001:8001"
+    links:
+    - db:db
+    depends_on:
+      - migration
+      - db
+    environment:
+      - "ENVIRONMENT=DOCKER"
+      - "SECRET_KEY=s_@dp0qks+r#ziw9ly_8x)a=c=+-f43$g@c$x5a0__mt!!mb^*"
+      - "NAME=handball_app"
+      - "USER=mitaka"
+      - "PASSWORD=mitaka1"
+      # - DEBUG=1
+  migration:
+    build: .
+    command: python manage.py migrate --noinput
+    volumes:
+      - .:/django-docker
+    depends_on:
+        - db
+    environment:
+      - "ENVIRONMENT=DOCKER"
+      - "SECRET_KEY=s_@dp0qks+r#ziw9ly_8x)a=c=+-f43$g@c$x5a0__mt!!mb^*"
+      - "NAME=handball_app"
+      - "USER=mitaka"
+      - "PASSWORD=mitaka1"

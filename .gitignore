@@ -1,0 +1,14 @@
+# output/*
+# !output/.gitkeep
+# *.json
+*.pyc
+__pycache__/
+*.log
+# build/
+# project.egg-info/
+# setup.py
+local_overrides.py
+*.html
+*.swp
+*.swo
+*.conf
