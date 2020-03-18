@@ -19,8 +19,10 @@
 + Sending results
   ```sh
 curl -i -H "Content-Type: application/json" -X POST --data '{"data": "Denmark | Belgium | 0:0 | 1:1\nBelgium | Austria | 2:0 | 0:2\nLatvia | Monaco | 2:0 | 0:0\nBulgaria | Italy | 2:1 | 3:2\nstop"}' http://localhost:8001/results_endpoint/
-
+```
+```sh
 curl -i -H "Content-Type: application/json" -X POST --data '{"data": "Montenegro | Cyprus | 0:0 | 1:1\nMontenegro | Bosnia | 0:0 | 1:1\nMontenegro | South Africa | 0:0 | 1:1\nstop"}' http://localhost:8001/results_endpoint/
-
+```
+```sh
 curl -i -H "Content-Type: application/json" -X POST --data '{"data": "Brazil | Germany | 1:1 | 7:0\nstop"}' http://localhost:8001/results_endpoint/
 ```
