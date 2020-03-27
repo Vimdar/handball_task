@@ -96,6 +96,9 @@ else:
             'PASSWORD': config.get(config_section, 'DATABASE_PASSWORD'),
             'HOST': config.get(config_section, 'DATABASE_HOST'),
             'PORT': config.get(config_section, 'DATABASE_PORT'),
+            'TEST': {
+                'NAME': 'test_database',
+            },
             # 'OPTIONS': :"{'options': '-c search_path=...'}",
         }
     }
