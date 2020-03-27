@@ -55,6 +55,42 @@ class ResultListView(ListCreateAPIView, GenericViewSet):
                 country_ins.opponents += row.data['opponents']
                 country_ins.save()
 
+    def read_thread(self, data, queue):
+        # ...one to read the input line by line and to store it
+        # in a data structure of your choice...
+        threading.current_thread().name = 'read_thread'
+        data = data['data'].split('\n')
+        # data guaranteed ends up with a stop line we do not need
+        data = data[:-1]
+        rows_left = len(data) - 1
+        for row in data:
+            queue.put({'rows_left': rows_left, 'row': row})
+            # print(
+            #     f'{threading.current_thread().name} - '
+            #     f'id: {threading.get_ident()}'
+            # )
+            rows_left -= 1
+
+    def calc_thread(self, queue):
+        # ...and a second thread that takes the input lines one by one from
+        # the same structure and makes the needed calculations...
+        threading.current_thread().name = 'calc_thread'
+        rows_left = 1
+        res = []
+        while rows_left:
+            # print(
+            #     f'{threading.current_thread().name} - '
+            #     f'id: {threading.get_ident()}'
+            # )
+            try:
+                row = queue.get(False)
+                res.append(self.process_score(row['row']))
+                rows_left = row['rows_left']
+            except Empty:
+                # print('Nothing in queue...')
+                pass
+        return res
+
     def process_score(self, line):
         line = line.split('|')
         line = [x.strip() for x in line]
