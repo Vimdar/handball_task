@@ -1,3 +1,7 @@
+import threading
+from concurrent.futures import ThreadPoolExecutor
+from queue import Queue
+from multiprocessing.queues import Empty
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.generics import ListCreateAPIView
 from rest_framework.viewsets import GenericViewSet
@@ -67,7 +71,9 @@ class ResultListView(ListCreateAPIView, GenericViewSet):
                     )
         if first_wins:
             results[0]['wins'] = 1
+            results[1]['wins'] = 0
         else:
+            results[0]['wins'] = 0
             results[1]['wins'] = 1
         return results
 
