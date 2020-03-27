@@ -45,3 +45,19 @@ services:
       - "NAME=handball_app"
       - "USER=mitaka"
       - "PASSWORD=mitaka1"
+  run_tests:
+    build: .
+    command: python3 manage.py test results/
+    volumes:
+      - .:/django-docker
+    depends_on:
+      - web
+      - migration
+      - db
+    environment:
+      - "ENVIRONMENT=DOCKER"
+      - "SECRET_KEY=s_@dp0qks+r#ziw9ly_8x)a=c=+-f43$g@c$x5a0__mt!!mb^*"
+      - "NAME=handball_app"
+      - "USER=mitaka"
+      - "PASSWORD=mitaka1"
+      # - DEBUG=1
