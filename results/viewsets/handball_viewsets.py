@@ -23,13 +23,13 @@ class ResultListView(ListCreateAPIView, GenericViewSet):
         OrderingFilter
     )
 
-# curl -i -H "Content-Type: application/json" -X POST
-# --data '{"data": "Denmark | Belgium | 0:0 | 1:1\nBelgium | Austria | 2:0 | 0:2\nLatvia | Monaco | 2:0 | 0:0\nBulgaria | Italy | 2:1 | 3:2\nstop"}'
-# http://localhost:8000/results_endpoint/
     def create(self, request, *args, **kwargs):
-        data = request.data['data'].split('\n')
-        # data guaranteed ends up with a stop line we do not need
-        stores = [self.process_score(x) for x in data[:-1]]
+        data = request.data
+        qq = Queue()
+        with ThreadPoolExecutor(max_workers=2) as prod:
+            f2 = prod.submit(self.calc_thread, qq)
+            prod.submit(self.read_thread, data, qq)
+            stores = f2.result()
         stores_flat = [x for pair in stores for x in pair]
         records = [self.get_serializer(data=x) for x in stores_flat]
         for record in records:
