@@ -26,6 +26,11 @@ class ResultListView(ListCreateAPIView, GenericViewSet):
     def create(self, request, *args, **kwargs):
         data = request.data
         qq = Queue()
+        # adding threading part of the task with python concurrent.futures module
+        # and a python built-in Queue (since our task is not very heavy and time-consuming)
+        # instead of having lots of additional overhead from using another asynchronous
+        # task job package for background jobs (e.g. celery, etc.) and additional message
+        # broker
         with ThreadPoolExecutor(max_workers=2) as prod:
             f2 = prod.submit(self.calc_thread, qq)
             prod.submit(self.read_thread, data, qq)
@@ -65,10 +70,6 @@ class ResultListView(ListCreateAPIView, GenericViewSet):
         rows_left = len(data) - 1
         for row in data:
             queue.put({'rows_left': rows_left, 'row': row})
-            # print(
-            #     f'{threading.current_thread().name} - '
-            #     f'id: {threading.get_ident()}'
-            # )
             rows_left -= 1
 
     def calc_thread(self, queue):
@@ -78,10 +79,6 @@ class ResultListView(ListCreateAPIView, GenericViewSet):
         rows_left = 1
         res = []
         while rows_left:
-            # print(
-            #     f'{threading.current_thread().name} - '
-            #     f'id: {threading.get_ident()}'
-            # )
             try:
                 row = queue.get(False)
                 res.append(self.process_score(row['row']))

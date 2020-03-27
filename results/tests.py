@@ -39,17 +39,6 @@ class BaseModelTestCase(TestCase):
 
 
 class CountryModelTest(BaseModelTestCase):
-    # def test_created_properly(self):
-    #     self.assertEqual(
-    #         self.country.country_name,
-    #         TEST_DATA['first_country']['country_name']
-    #     )
-    #     self.assertEqual(self.country.wins, TEST_DATA['first_country']['wins'])
-    #     self.assertEqual(
-    #         self.country.opponents,
-    #         TEST_DATA['first_country']['opponents']
-    #     )
-
     def test_country_name_length(self):
         long_name = 'x'*120
         country = self.create_country(long_name, 1, ['Belarus'])
