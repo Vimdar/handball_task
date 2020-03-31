@@ -1,85 +1,18 @@
 from django.forms.models import model_to_dict
-from django.test import TestCase, Client
+
 from results.models import Country
-from django.core.validators import ValidationError
+from results.tests.base import BaseModelTestCase, BaseViewTest
 from results.serializers.results_serializers import ResultSerializer
-from results.viewsets.handball_viewsets import ResultListView
 from results.constants import (
     TEST_DATA,
     TEST_SCORES,
     TEST_LINES,
     TEST_RESULTS,
-    EXAMPLE_LISTING,
-    TEST_POST_DATA,
     TEST_POST_RESPONSE,
+    TEST_REQUEST_DATA,
+    TEST_SCORES_RESULTS,
+    THREAD_NAMES_DEFAULT,
 )
-
-
-class BaseModelTestCase(TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        super(BaseModelTestCase, cls).setUpClass()
-        cls.country = cls.create_country(**TEST_DATA['first_country'])
-        cls.country.save()
-
-    @classmethod
-    # instead of using factory package
-    def create_country(
-        self,
-        country_name,
-        wins,
-        opponents,
-    ):
-        return Country(
-            country_name=country_name,
-            wins=wins,
-            opponents=opponents
-        )
-
-
-class CountryModelTest(BaseModelTestCase):
-    def test_country_name_length(self):
-        long_name = 'x'*120
-        country = self.create_country(long_name, 1, ['Belarus'])
-        with self.assertRaises(ValidationError):
-            country.full_clean()
-
-
-class SerializerTest(BaseModelTestCase):
-    def setUp(self):
-        self.no_results_country = {
-            'country_name': 'no results country',
-            'opponents': [],
-        }
-
-    def test_proper_serialize(self):
-        # no pks are serialized
-        self.assertEqual(
-            ResultSerializer(self.country).data,
-            TEST_DATA['first_country']
-        )
-
-    def test_serializer_save_empty_country(self):
-        ser = ResultSerializer(data=self.no_results_country)
-        self.assertEqual(True, ser.is_valid())
-        self.assertEqual(
-            ser.save(),
-            Country.objects.filter(country_name='no results country').first()
-        )
-
-
-class BaseViewTest(TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        super(BaseViewTest, cls).setUpClass()
-        cls.client = Client()
-        cls.view = ResultListView()
-
-    def setUp(self):
-        self.main_resp = self.client.get('/')
-        self.results_enpoint_resp = self.client.get('/results_endpoint/')
 
 
 class ListViewTest(BaseViewTest, BaseModelTestCase):
@@ -166,6 +99,9 @@ class PostViewTest(BaseViewTest, BaseModelTestCase):
 
 
 class TestFunctions(BaseViewTest):
+    def setUp(self):
+        # super().setUp()
+        self.values, self.threads_ran = self.view.get_stores(TEST_REQUEST_DATA)
 
     def test_first_team_wins(self):
         self.assertEqual(
@@ -203,56 +139,14 @@ class TestFunctions(BaseViewTest):
             self.view.process_score(TEST_LINES['second'])
         )
 
+    def test_get_scores_results(self):
+        # res, _ = self.view.get_stores(TEST_REQUEST_DATA)
+        self.assertEqual(self.values, TEST_SCORES_RESULTS)
 
-class FirstExampleTest(BaseViewTest):
-    def setUp(self):
-        self.res = self.client.post(
-            '/results_endpoint/',
-            data={
-                'data': TEST_POST_DATA['first']
-            }
-        )
-
-    def test_results(self):
-        res = self.client.get('/results_endpoint/')
-        self.assertEqual(res.data['count'], len(EXAMPLE_LISTING['first']))
+    def test_get_scores_threads_ran(self):
+        thread_names_set = set([x.getName() for x in self.threads_ran])
+        thread_names_default = set(THREAD_NAMES_DEFAULT)
         self.assertEqual(
-            [dict(x) for x in res.data['results']],
-            EXAMPLE_LISTING['first']
-        )
-
-
-class SecondExampleTest(BaseViewTest):
-    def setUp(self):
-        self.res = self.client.post(
-            '/results_endpoint/',
-            data={
-                'data': TEST_POST_DATA['second']
-            }
-        )
-
-    def test_results(self):
-        res = self.client.get('/results_endpoint/')
-        self.assertEqual(res.data['count'], len(EXAMPLE_LISTING['second']))
-        self.assertEqual(
-            [dict(x) for x in res.data['results']],
-            EXAMPLE_LISTING['second']
-        )
-
-
-class ThirdExampleTest(BaseViewTest):
-    def setUp(self):
-        self.res = self.client.post(
-            '/results_endpoint/',
-            data={
-                'data': TEST_POST_DATA['third']
-            }
-        )
-
-    def test_results(self):
-        res = self.client.get('/results_endpoint/')
-        self.assertEqual(res.data['count'], len(EXAMPLE_LISTING['third']))
-        self.assertEqual(
-            [dict(x) for x in res.data['results']],
-            EXAMPLE_LISTING['third']
+            thread_names_default,
+            thread_names_default & thread_names_set
         )
