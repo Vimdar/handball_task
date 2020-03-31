@@ -193,3 +193,14 @@ TEST_POST_RESPONSE = [
         "opponents": ["Bulgaria"]
     }
 ]
+
+TEST_REQUEST_DATA = {'data': 'Brazil | Germany | 1:1 | 7:0\nstop'}
+
+TEST_SCORES_RESULTS = [
+     (
+        {'country_name': 'Brazil', 'opponents': ['Germany'], 'wins': 0},
+        {'country_name': 'Germany', 'opponents': ['Brazil'], 'wins': 1}
+     )
+]
+
+THREAD_NAMES_DEFAULT = ['calc_thread', 'read_thread']
