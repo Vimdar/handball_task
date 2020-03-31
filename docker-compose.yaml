@@ -47,7 +47,7 @@ services:
       - "PASSWORD=mitaka1"
   run_tests:
     build: .
-    command: python3 manage.py test results/
+    command: python3 manage.py test results/tests/
     volumes:
       - .:/django-docker
     depends_on:
