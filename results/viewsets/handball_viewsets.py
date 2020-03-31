@@ -1,5 +1,5 @@
 import threading
-from concurrent.futures import ThreadPoolExecutor
+from results.util import EnumThreadPoolExecutor
 from queue import Queue
 from multiprocessing.queues import Empty
 from django_filters.rest_framework import DjangoFilterBackend
@@ -25,16 +25,7 @@ class ResultListView(ListCreateAPIView, GenericViewSet):
 
     def create(self, request, *args, **kwargs):
         data = request.data
-        qq = Queue()
-        # adding threading part of the task with python concurrent.futures module
-        # and a python built-in Queue (since our task is not very heavy and time-consuming)
-        # instead of having lots of additional overhead from using another asynchronous
-        # task job package for background jobs (e.g. celery, etc.) and additional message
-        # broker
-        with ThreadPoolExecutor(max_workers=2) as prod:
-            f2 = prod.submit(self.calc_thread, qq)
-            prod.submit(self.read_thread, data, qq)
-            stores = f2.result()
+        stores, _ = self.get_stores(data)
         stores_flat = [x for pair in stores for x in pair]
         records = [self.get_serializer(data=x) for x in stores_flat]
         for record in records:
@@ -44,6 +35,19 @@ class ResultListView(ListCreateAPIView, GenericViewSet):
             [rec.data for rec in records],
             status=HTTP_201_CREATED,
         )
+
+    def get_stores(self, data):
+        qq = Queue()
+        # adding threading part of the task with python concurrent.futures module
+        # and a python built-in Queue (since our task is not very heavy and time-consuming)
+        # instead of having lots of additional overhead from using another asynchronous
+        # task job package for background jobs (e.g. celery, etc.) and additional message
+        # broker
+        with EnumThreadPoolExecutor(max_workers=2) as prod:
+            f2 = prod.submit(self.calc_thread, qq)
+            prod.submit(self.read_thread, data, qq)
+            stores = f2.result()
+        return stores, prod.get_threads_run()
 
     def perform_simple_upsert(self, row):
         # no need to keep more complicated track of so called dirty fields
